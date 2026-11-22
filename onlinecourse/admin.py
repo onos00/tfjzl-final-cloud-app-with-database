@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Course, Lesson, Instructor, Learner, Question, Choice, Submission
+from .models import Course, Lesson, Instructor, Learner, Question, Choice, Submission, Enrollment
 
 class ChoiceInline(admin.StackedInline):
     model = Choice
@@ -9,8 +9,12 @@ class QuestionInline(admin.StackedInline):
     model = Question
     extra = 2
 
+class LessonInline(admin.StackedInline):
+    model = Lesson
+    extra = 2
+
 class CourseAdmin(admin.ModelAdmin):
-    inlines = [LessonInline, QuestionInline] if 'LessonInline' in globals() else [QuestionInline]
+    inlines = [LessonInline, QuestionInline]
     list_display = ('name', 'pub_date', 'total_enrollment')
     search_fields = ['name', 'description']
 
@@ -29,3 +33,4 @@ admin.site.register(Choice)
 admin.site.register(Instructor)
 admin.site.register(Learner)
 admin.site.register(Submission)
+admin.site.register(Enrollment)
