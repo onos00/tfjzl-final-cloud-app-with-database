@@ -4,7 +4,7 @@ from django.urls import reverse
 from django.views import generic
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.models import User
-from .models import Course, Lesson, Question, Choice, Submission, Instructor, Learner
+from .models import Course, Lesson, Question, Choice, Submission, Instructor, Learner, Enrollment
 
 def index(request):
     course_list = Course.objects.order_by('-pub_date')[:10]
@@ -34,8 +34,12 @@ def enroll(request, course_id):
 def submit(request, course_id):
     course = get_object_or_404(Course, pk=course_id)
     if request.method == 'POST':
-        learner = request.user
-        submission = Submission.objects.create(learner=learner, course=course)
+        # Get or create the Learner and Enrollment associated with the current user and course
+        learner, _ = Learner.objects.get_or_create(user=request.user)
+        enrollment, _ = Enrollment.objects.get_or_create(learner=learner, course=course)
+        
+        # Create submission linked to the enrollment
+        submission = Submission.objects.create(enrollment=enrollment)
         
         for key in request.POST:
             if key.startswith('choice_'):
@@ -44,6 +48,8 @@ def submit(request, course_id):
                 submission.choices.add(choice)
                 
         return HttpResponseRedirect(reverse('onlinecourse:show_exam_result', args=(course.id, submission.id)))
+    
+    return redirect('onlinecourse:course_details', args=(course.id,))
 
 def show_exam_result(request, course_id, submission_id):
     course = get_object_or_404(Course, pk=course_id)
